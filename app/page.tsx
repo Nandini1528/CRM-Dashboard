@@ -11,6 +11,7 @@ import { CustomerPagination } from "@/components/customers/CustomerPagination";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialog";
+import { DashboardOverview } from "@/components/customers/DashboardOverview";
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_FILTERS,
@@ -23,6 +24,10 @@ import {
 
 export default function Home() {
   const { activeSection } = useNavigation();
+
+  if (activeSection === "Dashboard") {
+    return <DashboardOverview />;
+  }
 
   if (activeSection !== "Customers") {
     return (

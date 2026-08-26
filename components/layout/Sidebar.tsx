@@ -45,7 +45,9 @@ export function Sidebar({ activeSection, onSelect, className }: SidebarProps) {
             onClick={() => onSelect(label)}
             className={cn(
               "flex items-center gap-3 px-2.5 py-2.5 rounded-lg transition-colors",
-              active ? "text-white" : "text-sidebar-muted hover:text-white"
+              active
+                ? "relative z-10 -mr-5 rounded-l-xl rounded-r-none bg-white text-slate-900 md:-mr-6"
+                : "text-sidebar-muted hover:bg-white/5 hover:text-white"
             )}
           >
             <Icon size={18} className="shrink-0" />

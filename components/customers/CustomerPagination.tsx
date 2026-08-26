@@ -24,12 +24,56 @@ export function CustomerPagination({
   const end = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className="flex items-center justify-between border-t px-4 py-3 text-sm">
-      <p className="text-muted-foreground">
+    <div className="flex flex-col gap-3 border-t px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      {/* Prev / page count / next - always on its own row, full width on mobile */}
+      <div className="flex items-center justify-between gap-2 sm:hidden">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          Previous
+        </Button>
+        <span className="text-muted-foreground text-xs">
+          Page {page} of {totalPages}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          Next
+        </Button>
+      </div>
+
+      {/* Count + page size - second row on mobile */}
+      <div className="flex items-center justify-between gap-2 sm:hidden">
+        <p className="text-muted-foreground text-xs">
+          {start}–{end} of {totalItems}
+        </p>
+        <select
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          className="rounded-md border bg-background px-2 py-1 text-xs"
+        >
+          {PAGE_SIZE_OPTIONS.map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop: original single-row layout, unchanged */}
+      <p className="hidden text-muted-foreground sm:block">
         Showing {start}–{end} of {totalItems}
       </p>
 
-      <div className="flex items-center gap-4">
+      <div className="hidden items-center gap-4 sm:flex">
         <select
           value={pageSize}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}

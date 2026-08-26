@@ -79,9 +79,6 @@ export function CustomerFilters({
 
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // Which saved filter (if any) matches what's currently selected in the draft.
-  // Recalculated on every render, so it updates the instant you click one,
-  // and clears itself if you then manually change a field.
   const activeSavedFilterId =
     savedFilters.find((sf) => JSON.stringify(sf.filters) === JSON.stringify(draft))
       ?.id ?? null;
@@ -152,8 +149,8 @@ export function CustomerFilters({
       : `${draft.companies.length} companies selected`;
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative flex-1 max-w-sm">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <div className="relative w-full sm:max-w-sm sm:flex-1">
         <Search
           size={16}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -162,7 +159,7 @@ export function CustomerFilters({
           placeholder="Search name, email, company..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 pr-9"
+          className="w-full pl-9 pr-9"
         />
         {searchTerm && (
           <button
@@ -181,7 +178,7 @@ export function CustomerFilters({
           type="button"
           variant="outline"
           onClick={handleOpen}
-          className="gap-2"
+          className="w-full gap-2 sm:w-auto"
         >
           <SlidersHorizontal size={16} />
           Filters{activeCount > 0 ? ` (${activeCount})` : ""}

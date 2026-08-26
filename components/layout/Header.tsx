@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 
 interface HeaderProps {
   title?: string;
@@ -22,17 +22,9 @@ export function Header({ title = "Customers", onMenuClick }: HeaderProps) {
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          className="relative p-2 rounded-md hover:bg-muted text-muted-foreground"
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
-        </button>
+      <div className="flex items-center">
         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-          AR
+          NT
         </div>
       </div>
     </header>

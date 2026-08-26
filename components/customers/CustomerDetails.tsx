@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CustomerAvatar } from "@/components/customers/CustomerAvatar";
 import type { Customer } from "@/types/customer";
 
 interface CustomerDetailsProps {
@@ -28,49 +29,58 @@ export function CustomerDetails({
 }: CustomerDetailsProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         {customer && (
           <>
-            <DialogHeader>
-              <DialogTitle>{customer.name}</DialogTitle>
-            </DialogHeader>
+            {/* Cover banner */}
+            <div className="h-20 bg-muted" />
 
-            <div className="flex flex-col gap-5 py-2">
-              <div>
-                <StatusBadge status={customer.status} />
+            <div className="px-6">
+              {/* Avatar and customer summary overlapping the banner */}
+              <div className="-mt-10 mb-5 flex items-end gap-3">
+                <CustomerAvatar
+                  name={customer.name}
+                  size="lg"
+                  className="ring-4 ring-background"
+                />
+                <DialogHeader className="min-w-0 flex-1 text-left p-0 pb-0.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <DialogTitle className="truncate text-xl">{customer.name}</DialogTitle>
+                    <StatusBadge status={customer.status} />
+                  </div>
+                  <p className="truncate text-sm text-muted-foreground">{customer.email}</p>
+                </DialogHeader>
               </div>
 
-              <DetailRow label="Email" value={customer.email} />
-              <DetailRow label="Phone" value={customer.phone} />
-              <DetailRow label="Company" value={customer.company} />
-              <DetailRow label="Last Contact Date" value={customer.lastContactDate} />
+              <div className="flex flex-col gap-5 pb-6">
+                <DetailRow label="Phone" value={customer.phone} />
+                <DetailRow label="Company" value={customer.company} />
+                <DetailRow label="Last Contact Date" value={customer.lastContactDate} />
 
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
-                <p className="text-sm whitespace-pre-wrap">
-                  {customer.notes || (
-                    <span className="text-muted-foreground italic">No notes yet.</span>
-                  )}
-                </p>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {customer.notes || (
+                      <span className="text-muted-foreground italic">No notes yet.</span>
+                    )}
+                  </p>
+                </div>
               </div>
+
+              <DialogFooter className="flex-row items-center gap-2 sm:justify-between border-t -mx-6 px-6 pt-4 pb-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onDelete(customer)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
+                >
+                  Delete
+                </Button>
+                <Button type="button" onClick={() => onEdit(customer)}>
+                  Edit Customer
+                </Button>
+              </DialogFooter>
             </div>
-
-            <DialogFooter className="flex-row gap-2 sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => onDelete(customer)}
-              >
-                Delete
-              </Button>
-              <Button
-                type="button"
-                className="flex-1"
-                onClick={() => onEdit(customer)}
-              >
-                Edit Customer
-              </Button>
-            </DialogFooter>
           </>
         )}
       </DialogContent>

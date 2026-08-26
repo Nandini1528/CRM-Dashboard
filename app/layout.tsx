@@ -17,11 +17,11 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-sidebar p-2 md:p-3 gap-2 md:gap-3">
       <Sidebar
         activeSection={activeSection}
         onSelect={setActiveSection}
-        className="hidden md:flex"
+        className="hidden md:flex shrink-0"
       />
 
       {mobileOpen && (
@@ -37,7 +37,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden bg-white rounded-3xl shadow-xl">
         <Header title={activeSection} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

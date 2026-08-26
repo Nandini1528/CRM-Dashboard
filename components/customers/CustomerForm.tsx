@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CustomerAvatar } from "./CustomerAvatar";
 import { CUSTOMER_STATUSES, type CustomerInput } from "@/types/customer";
 
 const EMPTY_VALUES: CustomerInput = {
@@ -105,103 +106,119 @@ export function CustomerForm({
     }
   }
 
+  const displayName = values.name.trim() || (mode === "create" ? "New Customer" : "");
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === "create" ? "Add Customer" : "Edit Customer"}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+        {/* Cover banner */}
+        <div className="h-20 bg-muted" />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field label="Name" error={errors.name} required>
-            <Input
-              value={values.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder="Jane Doe"
+        <div className="px-6">
+          {/* Avatar overlapping the banner */}
+          <div className="-mt-10 mb-3">
+            <CustomerAvatar
+              name={displayName || "?"}
+              size="lg"
+              className="ring-4 ring-background"
             />
-          </Field>
-
-          <Field label="Email" error={errors.email} required>
-            <Input
-              type="email"
-              value={values.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              placeholder="jane@company.com"
-            />
-          </Field>
-
-          <Field label="Phone" error={errors.phone} required>
-            <Input
-              value={values.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-              placeholder="+91 12345 67890"
-            />
-          </Field>
-
-          <Field label="Company" error={errors.company} required>
-            <Input
-              value={values.company}
-              onChange={(e) => updateField("company", e.target.value)}
-              placeholder="Acme Corp"
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-          <Field label="Status">
-  <Select
-    value={values.status}
-    onValueChange={(v: string) => updateField("status", v as CustomerInput["status"])}
-  >
-    <SelectTrigger>
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      {CUSTOMER_STATUSES.map((status) => (
-        <SelectItem key={status} value={status}>
-          {status}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</Field>
-
-            <Field label="Last Contact Date" error={errors.lastContactDate} required>
-              <Input
-                type="date"
-                value={values.lastContactDate}
-                onChange={(e) => updateField("lastContactDate", e.target.value)}
-              />
-            </Field>
           </div>
 
-          <Field label="Notes">
-            <Textarea
-              value={values.notes}
-              onChange={(e) => updateField("notes", e.target.value)}
-              placeholder="Meeting notes and follow-up items..."
-              rows={3}
-            />
-          </Field>
+          <DialogHeader className="text-left p-0 mb-5">
+            <DialogTitle className="text-xl">
+              {mode === "create" ? "Add Customer" : "Edit Customer"}
+            </DialogTitle>
+          </DialogHeader>
 
-          {submitError && (
-            <p className="text-sm text-destructive">{submitError}</p>
-          )}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Field label="Name" error={errors.name} required>
+              <Input
+                value={values.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                placeholder="Jane Doe"
+              />
+            </Field>
 
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting
-                ? "Saving..."
-                : mode === "create"
-                ? "Add Customer"
-                : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <Field label="Email" error={errors.email} required>
+              <Input
+                type="email"
+                value={values.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                placeholder="jane@company.com"
+              />
+            </Field>
+
+            <Field label="Phone" error={errors.phone} required>
+              <Input
+                value={values.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                placeholder="+91 12345 67890"
+              />
+            </Field>
+
+            <Field label="Company" error={errors.company} required>
+              <Input
+                value={values.company}
+                onChange={(e) => updateField("company", e.target.value)}
+                placeholder="Acme Corp"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Status">
+                <Select
+                  value={values.status}
+                  onValueChange={(v: string) => updateField("status", v as CustomerInput["status"])}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CUSTOMER_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <Field label="Last Contact Date" error={errors.lastContactDate} required>
+                <Input
+                  type="date"
+                  value={values.lastContactDate}
+                  onChange={(e) => updateField("lastContactDate", e.target.value)}
+                />
+              </Field>
+            </div>
+
+            <Field label="Notes">
+              <Textarea
+                value={values.notes}
+                onChange={(e) => updateField("notes", e.target.value)}
+                placeholder="Meeting notes and follow-up items..."
+                rows={3}
+              />
+            </Field>
+
+            {submitError && (
+              <p className="text-sm text-destructive">{submitError}</p>
+            )}
+
+            <DialogFooter className="gap-2 border-t -mx-6 px-6 pt-4 pb-6">
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : mode === "create"
+                  ? "Add Customer"
+                  : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
