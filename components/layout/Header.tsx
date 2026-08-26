@@ -7,7 +7,7 @@ interface HeaderProps {
   onMenuClick?: () => void;
 }
 
-export function Header({ title = "Customers", onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b bg-background">
       <div className="flex items-center gap-3">
@@ -19,13 +19,32 @@ export function Header({ title = "Customers", onMenuClick }: HeaderProps) {
         >
           <Menu size={20} />
         </button>
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+
+        {/* App brand — wordmark logo, inherits color via currentColor */}
+        <svg
+          viewBox="0 0 420 100"
+          className="h-6 w-auto text-foreground"
+          role="img"
+          aria-label="Rolodex"
+        >
+          <text
+            x="10"
+            y="72"
+            fontFamily="Inter, 'Helvetica Neue', Arial, sans-serif"
+            fontWeight="700"
+            fontSize="56"
+            letterSpacing="1"
+            fill="#3B5BDB"
+          >
+            ROLODEX
+          </text>
+        </svg>
       </div>
 
       <div className="flex items-center">
-        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-          NT
-        </div>
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3B5BDB] text-sm font-medium text-white">
+  NT
+</div>
       </div>
     </header>
   );

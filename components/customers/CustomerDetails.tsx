@@ -3,13 +3,22 @@
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CustomerAvatar } from "@/components/customers/CustomerAvatar";
+import { getAvatarBannerColor } from "@/lib/avatar";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { Customer } from "@/types/customer";
 
 interface CustomerDetailsProps {
@@ -27,88 +36,234 @@ export function CustomerDetails({
   onEdit,
   onDelete,
 }: CustomerDetailsProps) {
-  return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
-        {customer && (
-          <>
-            {/* Cover banner */}
-            <div className="h-20 bg-muted" />
+  const isMobile = useIsMobile();
 
-            <div className="px-6">
-              {/* Avatar and customer summary overlapping the banner */}
-              <div className="-mt-10 mb-5 flex items-end gap-3">
-                <CustomerAvatar
-                  name={customer.name}
-                  size="lg"
-                  className="ring-4 ring-background"
-                />
-                <DialogHeader className="min-w-0 flex-1 text-left p-0 pb-0.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <DialogTitle className="truncate text-xl">{customer.name}</DialogTitle>
-                    <StatusBadge status={customer.status} />
-                  </div>
-                  <p className="truncate text-sm text-muted-foreground">{customer.email}</p>
-                </DialogHeader>
-              </div>
+  if (!customer) return null;
 
-              <div className="flex flex-col gap-5 pb-6">
-                <DetailRow label="Phone" value={customer.phone} />
-                <DetailRow label="Company" value={customer.company} />
-                <DetailRow label="Last Contact Date" value={customer.lastContactDate} />
+  const formattedLastContact = customer.lastContactDate
+    ? new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date(customer.lastContactDate))
+    : "No contact yet";
 
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
-                  <p className="text-sm whitespace-pre-wrap">
-                    {customer.notes || (
-                      <span className="text-muted-foreground italic">No notes yet.</span>
-                    )}
-                  </p>
-                </div>
-              </div>
+  const body = (
+    <>
+      {/* Banner + Customer Identity */}
+      <div className="shrink-0">
+        <div
+          className={cn(
+            "h-24",
+            getAvatarBannerColor(customer.name)
+          )}
+        />
 
-              <DialogFooter className="flex-row items-center gap-2 sm:justify-between border-t -mx-6 px-6 pt-4 pb-6">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onDelete(customer)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
-                >
-                  Delete
-                </Button>
-                <Button type="button" onClick={() => onEdit(customer)}>
-                  Edit Customer
-                </Button>
-              </DialogFooter>
+        <div className="-mt-12 flex flex-col items-center px-8 text-center">
+          <CustomerAvatar
+            name={customer.name}
+            size="lg"
+            className="relative z-10 ring-4 ring-background shadow-sm"
+          />
+
+          <div className="mt-3 flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-xl font-semibold leading-tight tracking-tight">
+                {customer.name}
+              </p>
+
+              <p className="max-w-70 truncate text-sm leading-tight text-muted-foreground">
+                {customer.email}
+              </p>
             </div>
-          </>
-        )}
+
+            <div className="pt-1">
+              <StatusBadge status={customer.status} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Customer Details */}
+      <div className="flex-1 overflow-y-auto px-8">
+        <div className="my-6 border-t" />
+
+        <section className="divide-y">
+          <DetailRow
+            label="Phone"
+            value={customer.phone || "Not provided"}
+          />
+
+          <DetailRow
+            label="Company"
+            value={customer.company || "Not provided"}
+          />
+
+          <DetailRow
+            label="Last contact"
+            value={formattedLastContact}
+          />
+        </section>
+
+        {/* Notes */}
+        <section className="mt-6 rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Notes
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-foreground">
+            {customer.notes || "No notes added for this customer."}
+          </p>
+        </section>
+
+        {/* Extra bottom padding so content clears the sticky footer */}
+        <div className="h-4" />
+      </div>
+    </>
+  );
+
+  const actions = (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        className="bg-destructive/10 px-5 py-5 text-destructive hover:bg-destructive/20 hover:text-destructive"
+        onClick={() => onDelete(customer)}
+      >
+        Delete
+      </Button>
+
+      <Button
+        type="button"
+        className="flex-1 px-5 py-5 md:flex-none"
+        onClick={() => onEdit(customer)}
+      >
+        Edit Customer
+      </Button>
+    </>
+  );
+
+  /* =========================
+     Mobile: Bottom Sheet
+     ========================= */
+  if (isMobile) {
+    return (
+      <Sheet
+        open={open}
+        onOpenChange={(next) => !next && onClose()}
+      >
+        <SheetContent
+          side="bottom"
+          className="flex h-[92vh] flex-col gap-0 overflow-hidden rounded-t-2xl p-0"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>{customer.name}</SheetTitle>
+          </SheetHeader>
+
+          {body}
+
+          <SheetFooter className="flex-row items-center gap-3 border-t bg-muted/20 px-4 py-4">
+            {actions}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  /* =========================
+     Desktop: Dialog
+     ========================= */
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => !next && onClose()}
+    >
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{customer.name}</DialogTitle>
+        </DialogHeader>
+
+        {body}
+
+        <DialogFooter className="flex-row items-center justify-end gap-3 border-t bg-muted/20 px-8 py-6">
+  <div className="-translate-y-1 flex items-center gap-3">
+    {actions}
+  </div>
+</DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+/* =========================
+   Detail Row
+   ========================= */
+
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div>
-      <p className="text-sm font-medium text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm">{value}</p>
+    <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+      <p className="shrink-0 text-sm text-muted-foreground">
+        {label}
+      </p>
+
+      <p className="truncate text-sm font-medium text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: Customer["status"] }) {
-  const isActive = status === "Active";
+
+function StatusBadge({
+  status,
+}: {
+  status: Customer["status"];
+}) {
+  const normalizedStatus = String(status).toLowerCase();
+
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
-        isActive
-          ? "bg-emerald-100 text-emerald-700"
-          : "bg-slate-100 text-slate-600"
+        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset",
+
+        normalizedStatus === "active" &&
+          "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+
+        normalizedStatus === "inactive" &&
+          "bg-slate-100 text-slate-600 ring-slate-500/20",
+
+        normalizedStatus === "lead" &&
+          "bg-blue-50 text-blue-700 ring-blue-600/20",
+
+        !["active", "inactive", "lead"].includes(normalizedStatus) &&
+          "bg-muted text-muted-foreground ring-border"
       )}
     >
-      {status}
+      <span
+        className={cn(
+          "mr-1.5 h-1.5 w-1.5 rounded-full",
+
+          normalizedStatus === "active" &&
+            "bg-emerald-500",
+
+          normalizedStatus === "inactive" &&
+            "bg-slate-400",
+
+          normalizedStatus === "lead" &&
+            "bg-blue-500",
+
+          !["active", "inactive", "lead"].includes(normalizedStatus) &&
+            "bg-muted-foreground"
+        )}
+      />
+
+      {String(status)}
     </span>
   );
 }

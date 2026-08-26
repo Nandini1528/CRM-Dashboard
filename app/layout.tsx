@@ -17,7 +17,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-sidebar p-2 md:p-3 gap-2 md:gap-3">
+    <div className="flex h-screen overflow-hidden bg-white md:bg-sidebar p-0 md:p-3 gap-0 md:gap-3">
       <Sidebar
         activeSection={activeSection}
         onSelect={setActiveSection}
@@ -32,12 +32,15 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
               setActiveSection(section);
               setMobileOpen(false);
             }}
+            className="w-56 bg-sidebar-expanded shrink-0"
+            forceExpanded
+            overlapActiveTab={false}
           />
           <div className="flex-1 bg-black/50" onClick={() => setMobileOpen(false)} />
         </div>
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden bg-white rounded-3xl shadow-xl">
+      <div className="flex flex-1 flex-col overflow-hidden bg-white rounded-none md:rounded-3xl shadow-none md:shadow-xl">
         <Header title={activeSection} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

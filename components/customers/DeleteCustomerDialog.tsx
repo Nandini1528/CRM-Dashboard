@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,19 +30,28 @@ export function DeleteCustomerDialog({
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
+        <DialogHeader className="items-center text-center">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <Trash2 className="h-6 w-6 text-destructive" />
+          </div>
+
           <DialogTitle>Delete customer?</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            {customer ? <strong>{customer.name}</strong> : "this customer"}? This
-            action cannot be undone.
+            {customer ? (
+              <strong className="font-bold text-[#383838]">{customer.name}</strong>
+            ) : (
+              "this customer"
+            )}
+            ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 sm:justify-center">
           <Button
             type="button"
             variant="outline"
+            className="px-5 py-5"
             onClick={onCancel}
             disabled={isDeleting}
           >
@@ -50,6 +60,7 @@ export function DeleteCustomerDialog({
           <Button
             type="button"
             variant="destructive"
+            className="px-5 py-5"
             onClick={onConfirm}
             disabled={isDeleting}
           >

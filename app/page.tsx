@@ -7,6 +7,7 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerMutations } from "@/hooks/useCustomerMutations";
 import { CustomerTable } from "@/components/customers/CustomerTable";
 import { CustomerFilters } from "@/components/customers/CustomerFilters";
+import { CustomerSearchInput } from "@/components/customers/CustomerSearchInput";
 import { CustomerPagination } from "@/components/customers/CustomerPagination";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { CustomerForm } from "@/components/customers/CustomerForm";
@@ -224,19 +225,33 @@ function CustomersView() {
   const activeMutation = formMode === "create" ? createMutation : updateMutation;
 
   return (
-    <div className="p-8 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium text-slate-900">Customers</h1>
-        <Button onClick={handleAddClick}>+ Add Customer</Button>
+    <div className="p-4 sm:p-8 flex flex-col gap-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <h1 className="text-lg sm:text-xl font-medium text-slate-900 shrink-0">Customers</h1>
+        <CustomerSearchInput
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          className="w-full sm:w-80"
+        />
       </div>
-
-      <CustomerFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        filters={filters}
-        onFiltersChange={setFilters}
-        companyOptions={companyOptions}
-      />
+  
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <CustomerFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          companyOptions={companyOptions}
+          className="flex-1 px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
+        />
+        <Button
+          className="flex-1 bg-[#3B5BDB] px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
+          onClick={handleAddClick}
+        >
+          + Add Customer
+        </Button>
+      </div>
+    </div>
+  
 
       <CustomerTable
         customers={paginatedCustomers}

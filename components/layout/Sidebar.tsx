@@ -16,15 +16,24 @@ interface SidebarProps {
   activeSection: NavSection;
   onSelect: (section: NavSection) => void;
   className?: string;
+  forceExpanded?: boolean;
+  overlapActiveTab?: boolean;
 }
 
-export function Sidebar({ activeSection, onSelect, className }: SidebarProps) {
-  const [expanded, setExpanded] = useState(false);
+export function Sidebar({
+  activeSection,
+  onSelect,
+  className,
+  forceExpanded = false,
+  overlapActiveTab = true,
+}: SidebarProps) {
+  const [hovered, setHovered] = useState(false);
+  const expanded = forceExpanded || hovered;
 
   return (
     <aside
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={cn(
         "h-screen flex flex-col py-5 px-3 gap-1 transition-all duration-200 ease-out",
         expanded ? "w-56 bg-sidebar-expanded" : "w-18 bg-sidebar",
@@ -46,7 +55,9 @@ export function Sidebar({ activeSection, onSelect, className }: SidebarProps) {
             className={cn(
               "flex items-center gap-3 px-2.5 py-2.5 rounded-lg transition-colors",
               active
-                ? "relative z-10 -mr-5 rounded-l-xl rounded-r-none bg-white text-slate-900 md:-mr-6"
+                ? overlapActiveTab
+                  ? "relative z-10 -mr-5 rounded-l-xl rounded-r-none bg-white text-slate-900 md:-mr-6"
+                  : "bg-white text-slate-900 rounded-lg"
                 : "text-sidebar-muted hover:bg-white/5 hover:text-white"
             )}
           >

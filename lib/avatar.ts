@@ -8,6 +8,25 @@ const AVATAR_COLORS = [
     "bg-pink-100 text-pink-700",
     "bg-indigo-100 text-indigo-700",
   ];
+
+const AVATAR_BANNER_COLORS = [
+    "bg-blue-50",
+    "bg-amber-50",
+    "bg-rose-50",
+    "bg-violet-50",
+    "bg-cyan-50",
+    "bg-orange-50",
+    "bg-pink-50",
+    "bg-indigo-50",
+  ];
+
+function getAvatarColorIndex(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % AVATAR_COLORS.length;
+}
   
   export function getInitials(name: string): string {
     const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -17,10 +36,9 @@ const AVATAR_COLORS = [
   }
   
   export function getAvatarColor(name: string): string {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % AVATAR_COLORS.length;
-    return AVATAR_COLORS[index];
+    return AVATAR_COLORS[getAvatarColorIndex(name)];
+  }
+
+  export function getAvatarBannerColor(name: string): string {
+    return AVATAR_BANNER_COLORS[getAvatarColorIndex(name)];
   }
