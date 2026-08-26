@@ -136,7 +136,7 @@ export function CustomerForm({
             <Input
               value={values.phone}
               onChange={(e) => updateField("phone", e.target.value)}
-              placeholder="+1 (555) 123-4567"
+              placeholder="+91 12345 67890"
             />
           </Field>
 

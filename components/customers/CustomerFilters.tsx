@@ -1,8 +1,20 @@
-// components/customers/CustomerFilters.tsx
 "use client";
 
 import { useState } from "react";
 import { Search, SlidersHorizontal, X, ChevronsUpDown, Check } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +36,8 @@ import {
   CommandEmpty,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { useSavedFilters, type SavedFilter } from "@/hooks/useSavedFilters";
+import { SortableSavedFilterItem } from "@/components/customers/SortableSavedFilterItem";
 import {
   CUSTOMER_STATUSES,
   DEFAULT_FILTERS,
@@ -58,6 +72,19 @@ export function CustomerFilters({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CustomerFiltersType>(filters);
   const [companyPopoverOpen, setCompanyPopoverOpen] = useState(false);
+  const [saveNameInput, setSaveNameInput] = useState("");
+
+  const { savedFilters, saveFilter, deleteFilter, reorderSavedFilters } =
+    useSavedFilters();
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  // Which saved filter (if any) matches what's currently selected in the draft.
+  // Recalculated on every render, so it updates the instant you click one,
+  // and clears itself if you then manually change a field.
+  const activeSavedFilterId =
+    savedFilters.find((sf) => JSON.stringify(sf.filters) === JSON.stringify(draft))
+      ?.id ?? null;
 
   const activeCount = countActiveFilters(filters);
 
@@ -95,6 +122,28 @@ export function CustomerFilters({
     setOpen(false);
   }
 
+  function handleApplySavedFilter(savedFilter: SavedFilter) {
+    setDraft(savedFilter.filters);
+  }
+
+  function handleSaveCurrentDraft() {
+    const name = saveNameInput.trim();
+    if (!name) return;
+    saveFilter(name, draft);
+    setSaveNameInput("");
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = savedFilters.findIndex((sf) => sf.id === active.id);
+    const newIndex = savedFilters.findIndex((sf) => sf.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    reorderSavedFilters(arrayMove(savedFilters, oldIndex, newIndex));
+  }
+
   const companyTriggerLabel =
     draft.companies.length === 0
       ? "Select companies..."
@@ -113,8 +162,18 @@ export function CustomerFilters({
           placeholder="Search name, email, company..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 pr-9"
         />
+        {searchTerm && (
+          <button
+            type="button"
+            onClick={() => onSearchChange("")}
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
@@ -250,6 +309,49 @@ export function CustomerFilters({
                 value={draft.email}
                 onChange={(e) => setDraft((prev) => ({ ...prev, email: e.target.value }))}
               />
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Saved Filters</Label>
+
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={savedFilters.map((sf) => sf.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="flex flex-col gap-1.5">
+                    {savedFilters.map((sf) => (
+                      <SortableSavedFilterItem
+                        key={sf.id}
+                        savedFilter={sf}
+                        isActive={sf.id === activeSavedFilterId}
+                        onApply={handleApplySavedFilter}
+                        onDelete={deleteFilter}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+
+              <div className="flex items-center gap-2 mt-3">
+                <Input
+                  placeholder="Name this filter..."
+                  value={saveNameInput}
+                  onChange={(e) => setSaveNameInput(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSaveCurrentDraft}
+                  disabled={!saveNameInput.trim()}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
           </div>
 
