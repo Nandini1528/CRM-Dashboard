@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
 import { useNavigation } from "@/lib/navigation-context";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerMutations } from "@/hooks/useCustomerMutations";
+import { useDebounce } from "@/hooks/useDebounce";
+import { generateCsv, downloadCsv } from "@/lib/csv-export";
 import { CustomerTable } from "@/components/customers/CustomerTable";
 import { CustomerFilters } from "@/components/customers/CustomerFilters";
 import { CustomerSearchInput } from "@/components/customers/CustomerSearchInput";
@@ -33,7 +36,9 @@ export default function Home() {
   if (activeSection !== "Customers") {
     return (
       <div className="p-8">
-        <p className="text-sm text-muted-foreground">{activeSection} — coming soon.</p>
+        <p className="text-sm text-muted-foreground">
+          {activeSection} — coming soon.
+        </p>
       </div>
     );
   }
@@ -43,7 +48,9 @@ export default function Home() {
 
 function matchesSearch(customer: Customer, term: string): boolean {
   if (!term) return true;
+
   const lower = term.toLowerCase();
+
   return (
     customer.name.toLowerCase().includes(lower) ||
     customer.email.toLowerCase().includes(lower) ||
@@ -51,47 +58,103 @@ function matchesSearch(customer: Customer, term: string): boolean {
   );
 }
 
-function matchesFilters(customer: Customer, filters: CustomerFiltersType): boolean {
-  if (filters.status.length > 0 && !filters.status.includes(customer.status)) {
+function matchesFilters(
+  customer: Customer,
+  filters: CustomerFiltersType
+): boolean {
+  if (
+    filters.status.length > 0 &&
+    !filters.status.includes(customer.status)
+  ) {
     return false;
   }
-  if (filters.companies.length > 0 && !filters.companies.includes(customer.company)) {
+
+  if (
+    filters.companies.length > 0 &&
+    !filters.companies.includes(customer.company)
+  ) {
     return false;
   }
+
   if (filters.dateFrom && customer.lastContactDate < filters.dateFrom) {
     return false;
   }
+
   if (filters.dateTo && customer.lastContactDate > filters.dateTo) {
     return false;
   }
-  if (filters.phone && !customer.phone.toLowerCase().includes(filters.phone.toLowerCase())) {
+
+  if (
+    filters.phone &&
+    !customer.phone.toLowerCase().includes(filters.phone.toLowerCase())
+  ) {
     return false;
   }
-  if (filters.email && !customer.email.toLowerCase().includes(filters.email.toLowerCase())) {
+
+  if (
+    filters.email &&
+    !customer.email.toLowerCase().includes(filters.email.toLowerCase())
+  ) {
     return false;
   }
+
   return true;
 }
+
+// CSV column definitions for customer export
+const CUSTOMER_CSV_COLUMNS: {
+  key: keyof Customer;
+  label: string;
+}[] = [
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "company", label: "Company" },
+  { key: "status", label: "Status" },
+  { key: "lastContactDate", label: "Last Contact Date" },
+];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 function CustomersView() {
   const { data: customers = [], isLoading } = useCustomers();
-  const { createMutation, updateMutation, deleteMutation } = useCustomerMutations();
+
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+  } = useCustomerMutations();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<CustomerFiltersType>(DEFAULT_FILTERS);
-  const [sortField, setSortField] = useState<CustomerSortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const [filters, setFilters] =
+    useState<CustomerFiltersType>(DEFAULT_FILTERS);
+
+  const [sortField, setSortField] =
+    useState<CustomerSortField>("name");
+
+  const [sortDirection, setSortDirection] =
+    useState<SortDirection>("asc");
+
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+
+  const [pageSize, setPageSize] =
+    useState<number>(PAGE_SIZE_OPTIONS[0]);
+
+  const [selectedCustomerId, setSelectedCustomerId] =
+    useState<string | null>(null);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [formMode, setFormMode] =
+    useState<"create" | "edit">("create");
+
+  const [editingCustomer, setEditingCustomer] =
+    useState<Customer | null>(null);
+
+  const [customerToDelete, setCustomerToDelete] =
+    useState<Customer | null>(null);
 
   const companyOptions = useMemo(() => {
     return [...new Set(customers.map((c) => c.company))].sort();
@@ -99,23 +162,30 @@ function CustomersView() {
 
   const filteredCustomers = useMemo(() => {
     return customers.filter(
-      (c) => matchesSearch(c, searchTerm) && matchesFilters(c, filters)
+      (c) =>
+        matchesSearch(c, debouncedSearchTerm) &&
+        matchesFilters(c, filters)
     );
-  }, [customers, searchTerm, filters]);
+  }, [customers, debouncedSearchTerm, filters]);
 
   const sortedCustomers = useMemo(() => {
     return [...filteredCustomers].sort((a, b) => {
       const result = a[sortField].localeCompare(b[sortField]);
-      return sortDirection === "asc" ? result : -result;
+
+      return sortDirection === "asc"
+        ? result
+        : -result;
     });
   }, [filteredCustomers, sortField, sortDirection]);
 
-  // Reset to page 1 whenever the search/filter combination changes.
-  // Done during render (not in a useEffect) per React's guidance for
-  // "adjusting state when a prop/derived-value changes":
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const filterSignature = JSON.stringify({ searchTerm, filters });
-  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature);
+  const filterSignature = JSON.stringify({
+    searchTerm: debouncedSearchTerm,
+    filters,
+  });
+
+  const [prevFilterSignature, setPrevFilterSignature] =
+    useState(filterSignature);
+
   if (filterSignature !== prevFilterSignature) {
     setPrevFilterSignature(filterSignature);
     setPage(1);
@@ -123,17 +193,26 @@ function CustomersView() {
 
   const paginatedCustomers = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return sortedCustomers.slice(start, start + pageSize);
+
+    return sortedCustomers.slice(
+      start,
+      start + pageSize
+    );
   }, [sortedCustomers, page, pageSize]);
 
   const selectedCustomer = useMemo(
-    () => customers.find((c) => c.id === selectedCustomerId) ?? null,
+    () =>
+      customers.find(
+        (c) => c.id === selectedCustomerId
+      ) ?? null,
     [customers, selectedCustomerId]
   );
 
   function handleSortChange(field: CustomerSortField) {
     if (field === sortField) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection((prev) =>
+        prev === "asc" ? "desc" : "asc"
+      );
     } else {
       setSortField(field);
       setSortDirection("asc");
@@ -162,7 +241,7 @@ function CustomersView() {
   function handleEdit(customer: Customer) {
     setFormMode("edit");
     setEditingCustomer(customer);
-    setSelectedCustomerId(null); // close details, open form
+    setSelectedCustomerId(null);
     setIsFormOpen(true);
   }
 
@@ -179,20 +258,30 @@ function CustomersView() {
           toast.success("Customer added successfully.");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to add customer.");
+          toast.error(
+            error.message || "Failed to add customer."
+          );
         },
       });
     } else if (editingCustomer) {
       updateMutation.mutate(
-        { id: editingCustomer.id, input: values },
+        {
+          id: editingCustomer.id,
+          input: values,
+        },
         {
           onSuccess: () => {
             setIsFormOpen(false);
             setEditingCustomer(null);
-            toast.success("Customer updated successfully.");
+            toast.success(
+              "Customer updated successfully."
+            );
           },
           onError: (error) => {
-            toast.error(error.message || "Failed to update customer.");
+            toast.error(
+              error.message ||
+                "Failed to update customer."
+            );
           },
         }
       );
@@ -200,7 +289,7 @@ function CustomersView() {
   }
 
   function handleDelete(customer: Customer) {
-    setSelectedCustomerId(null); // close details view
+    setSelectedCustomerId(null);
     setCustomerToDelete(customer);
   }
 
@@ -213,45 +302,92 @@ function CustomersView() {
 
     deleteMutation.mutate(customerToDelete.id, {
       onSuccess: () => {
-        toast.success("Customer deleted successfully.");
+        toast.success(
+          "Customer deleted successfully."
+        );
         setCustomerToDelete(null);
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to delete customer.");
+        toast.error(
+          error.message || "Failed to delete customer."
+        );
       },
     });
   }
 
-  const activeMutation = formMode === "create" ? createMutation : updateMutation;
+  function handleExportCsv() {
+    if (sortedCustomers.length === 0) {
+      toast.error("No customers to export.");
+      return;
+    }
+
+    const csvContent = generateCsv(
+      sortedCustomers,
+      CUSTOMER_CSV_COLUMNS
+    );
+
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    downloadCsv(
+      `customers-${timestamp}.csv`,
+      csvContent
+    );
+
+    toast.success(
+      `Exported ${sortedCustomers.length} customer${
+        sortedCustomers.length === 1 ? "" : "s"
+      } to CSV.`
+    );
+  }
+
+  const activeMutation =
+    formMode === "create"
+      ? createMutation
+      : updateMutation;
 
   return (
-    <div className="p-4 sm:p-8 flex flex-col gap-4">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <h1 className="text-lg sm:text-xl font-medium text-slate-900 shrink-0">Customers</h1>
-        <CustomerSearchInput
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          className="w-full sm:w-80"
-        />
+    <div className="flex flex-col gap-4 bg-background p-4 text-foreground sm:p-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <h1 className="shrink-0 text-lg font-medium text-foreground sm:text-xl">
+            Customers
+          </h1>
+
+          <CustomerSearchInput
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            className="w-full sm:w-80"
+          />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <CustomerFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            companyOptions={companyOptions}
+            className="flex-1 px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
+          />
+
+          <Button
+            variant="outline"
+            className="flex-1 px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
+            onClick={handleExportCsv}
+            disabled={sortedCustomers.length === 0}
+          >
+            <Download className="mr-1.5 h-4 w-4" />
+            Export CSV
+          </Button>
+
+          <Button
+            className="flex-1 bg-[#3B5BDB] px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
+            onClick={handleAddClick}
+          >
+            + Add Customer
+          </Button>
+        </div>
       </div>
-  
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <CustomerFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          companyOptions={companyOptions}
-          className="flex-1 px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
-        />
-        <Button
-          className="flex-1 bg-[#3B5BDB] px-3 py-2 sm:flex-none sm:px-5 sm:py-5"
-          onClick={handleAddClick}
-        >
-          + Add Customer
-        </Button>
-      </div>
-    </div>
-  
 
       <CustomerTable
         customers={paginatedCustomers}
@@ -282,9 +418,13 @@ function CustomersView() {
         key={editingCustomer?.id ?? "create"}
         open={isFormOpen}
         mode={formMode}
-        initialValues={editingCustomer ?? undefined}
+        initialValues={
+          editingCustomer ?? undefined
+        }
         isSubmitting={activeMutation.isPending}
-        submitError={activeMutation.error?.message ?? null}
+        submitError={
+          activeMutation.error?.message ?? null
+        }
         onSubmit={handleFormSubmit}
         onCancel={handleFormCancel}
       />
