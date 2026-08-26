@@ -2,6 +2,7 @@
 
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Customer, CustomerSortField, SortDirection } from "@/types/customer";
 
 interface CustomerTableProps {
@@ -11,6 +12,13 @@ interface CustomerTableProps {
   sortDirection: SortDirection;
   onSortChange: (field: CustomerSortField) => void;
   onRowClick: (customer: Customer) => void;
+  // Bulk-selection props are optional so any existing caller that doesn't
+  // pass them keeps working exactly as before, with no checkbox column.
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
+  isAllSelected?: boolean;
+  isIndeterminate?: boolean;
 }
 
 const COLUMNS: { key: CustomerSortField | "phone" | "company" | "status"; label: string; sortable: boolean }[] = [
@@ -77,7 +85,16 @@ export function CustomerTable({
   sortDirection,
   onSortChange,
   onRowClick,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  isAllSelected = false,
+  isIndeterminate = false,
 }: CustomerTableProps) {
+  const selectionEnabled = Boolean(onToggleSelect && onToggleSelectAll);
+  const ids = selectedIds ?? new Set<string>();
+  const colSpan = COLUMNS.length + (selectionEnabled ? 1 : 0);
+
   return (
     <>
       {/* Desktop table - md screens and up */}
@@ -85,6 +102,16 @@ export function CustomerTable({
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
+              {selectionEnabled && (
+                <th className="w-10 px-4 py-3">
+                  <Checkbox
+                    checked={isAllSelected ? true : isIndeterminate ? "indeterminate" : false}
+                    onCheckedChange={() => onToggleSelectAll?.()}
+                    aria-label="Select all customers"
+                  />
+                </th>
+              )}
+
               {COLUMNS.map((col) => (
                 <th key={col.key} className="text-left px-4 py-3 font-medium text-muted-foreground">
                   {col.sortable ? (
@@ -106,36 +133,56 @@ export function CustomerTable({
 
           <tbody>
             {isLoading ? (
-              <SkeletonRows />
+              <SkeletonRows showCheckboxColumn={selectionEnabled} />
             ) : customers.length === 0 ? (
               <tr>
-                <td colSpan={COLUMNS.length} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={colSpan} className="px-4 py-10 text-center text-muted-foreground">
                   No customers found.
                   <div className="text-xs mt-1">Try changing your search or filters.</div>
                 </td>
               </tr>
             ) : (
-              customers.map((customer) => (
-                <tr
-                  key={customer.id}
-                  onClick={() => onRowClick(customer)}
-                  className="border-b last:border-0 hover:bg-muted/40 cursor-pointer transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium">
-                    <div className="flex items-center gap-3">
-                      <CustomerAvatar name={customer.name} />
-                      <span className="truncate">{customer.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.email}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.phone}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.company}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={customer.status} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{customer.lastContactDate}</td>
-                </tr>
-              ))
+              customers.map((customer) => {
+                const isRowSelected = ids.has(customer.id);
+
+                return (
+                  <tr
+                    key={customer.id}
+                    onClick={() => onRowClick(customer)}
+                    className={cn(
+                      "border-b last:border-0 hover:bg-muted/40 cursor-pointer transition-colors",
+                      isRowSelected && "bg-muted/40"
+                    )}
+                  >
+                    {selectionEnabled && (
+                      <td
+                        className="w-10 px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={isRowSelected}
+                          onCheckedChange={() => onToggleSelect?.(customer.id)}
+                          aria-label={`Select ${customer.name}`}
+                        />
+                      </td>
+                    )}
+
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-3">
+                        <CustomerAvatar name={customer.name} />
+                        <span className="truncate">{customer.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{customer.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{customer.phone}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{customer.company}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={customer.status} />
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{customer.lastContactDate}</td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -151,26 +198,50 @@ export function CustomerTable({
             <div className="text-xs mt-1">Try changing your search or filters.</div>
           </div>
         ) : (
-          customers.map((customer) => (
-            <button
-              key={customer.id}
-              type="button"
-              onClick={() => onRowClick(customer)}
-              className="w-full text-left border rounded-lg p-4 flex items-center justify-between gap-3 active:bg-muted/40 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <CustomerAvatar name={customer.name} size="sm" />
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{customer.name}</p>
-                  <p className="text-sm text-muted-foreground truncate">{customer.email}</p>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {customer.company} &middot; {customer.lastContactDate}
-                  </p>
+          customers.map((customer) => {
+            const isRowSelected = ids.has(customer.id);
+
+            return (
+              <div
+                key={customer.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onRowClick(customer)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onRowClick(customer);
+                  }
+                }}
+                className={cn(
+                  "w-full text-left border rounded-lg p-4 flex items-center justify-between gap-3 active:bg-muted/40 transition-colors cursor-pointer",
+                  isRowSelected && "bg-muted/40"
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {selectionEnabled && (
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isRowSelected}
+                        onCheckedChange={() => onToggleSelect?.(customer.id)}
+                        aria-label={`Select ${customer.name}`}
+                      />
+                    </span>
+                  )}
+
+                  <CustomerAvatar name={customer.name} size="sm" />
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{customer.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{customer.email}</p>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {customer.company} &middot; {customer.lastContactDate}
+                    </p>
+                  </div>
                 </div>
+                <StatusBadge status={customer.status} />
               </div>
-              <StatusBadge status={customer.status} />
-            </button>
-          ))
+            );
+          })
         )}
       </div>
     </>
@@ -198,11 +269,16 @@ function StatusBadge({ status }: { status: Customer["status"] }) {
   );
 }
 
-function SkeletonRows() {
+function SkeletonRows({ showCheckboxColumn = false }: { showCheckboxColumn?: boolean }) {
   return (
     <>
       {Array.from({ length: 6 }).map((_, i) => (
         <tr key={i} className="border-b last:border-0">
+          {showCheckboxColumn && (
+            <td className="px-4 py-3">
+              <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+            </td>
+          )}
           {COLUMNS.map((col) => (
             <td key={col.key} className="px-4 py-3">
               <div className="h-4 bg-muted rounded animate-pulse w-3/4" />

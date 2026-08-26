@@ -7,6 +7,7 @@ import { useNavigation } from "@/lib/navigation-context";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerMutations } from "@/hooks/useCustomerMutations";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSelection } from "@/hooks/useSelection";
 import { generateCsv, downloadCsv } from "@/lib/csv-export";
 import { CustomerTable } from "@/components/customers/CustomerTable";
 import { CustomerFilters } from "@/components/customers/CustomerFilters";
@@ -15,12 +16,15 @@ import { CustomerPagination } from "@/components/customers/CustomerPagination";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialog";
+import { BulkActionBar } from "@/components/customers/BulkActionBar";
+import { BulkDeleteDialog } from "@/components/customers/BulkDeleteDialog";
 import { DashboardOverview } from "@/components/customers/DashboardOverview";
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_FILTERS,
   type Customer,
   type CustomerInput,
+  type CustomerStatus,
   type CustomerFilters as CustomerFiltersType,
   type CustomerSortField,
   type SortDirection,
@@ -123,6 +127,8 @@ function CustomersView() {
     createMutation,
     updateMutation,
     deleteMutation,
+    bulkUpdateStatusMutation,
+    bulkDeleteMutation,
   } = useCustomerMutations();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -156,6 +162,8 @@ function CustomersView() {
   const [customerToDelete, setCustomerToDelete] =
     useState<Customer | null>(null);
 
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
   const companyOptions = useMemo(() => {
     return [...new Set(customers.map((c) => c.company))].sort();
   }, [customers]);
@@ -186,11 +194,6 @@ function CustomersView() {
   const [prevFilterSignature, setPrevFilterSignature] =
     useState(filterSignature);
 
-  if (filterSignature !== prevFilterSignature) {
-    setPrevFilterSignature(filterSignature);
-    setPage(1);
-  }
-
   const paginatedCustomers = useMemo(() => {
     const start = (page - 1) * pageSize;
 
@@ -199,6 +202,30 @@ function CustomersView() {
       start + pageSize
     );
   }, [sortedCustomers, page, pageSize]);
+
+  // Selection is scoped to the customers visible on the current page, so
+  // "select all" always matches what the person can actually see.
+  const pageCustomerIds = useMemo(
+    () => paginatedCustomers.map((c) => c.id),
+    [paginatedCustomers]
+  );
+
+  const {
+    selectedIds,
+    selectedArray,
+    selectedCount,
+    toggle: toggleSelect,
+    toggleAll: toggleSelectAll,
+    clear: clearSelection,
+    isAllSelected,
+    isIndeterminate,
+  } = useSelection(pageCustomerIds);
+
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature);
+    setPage(1);
+    clearSelection();
+  }
 
   const selectedCustomer = useMemo(
     () =>
@@ -219,9 +246,15 @@ function CustomersView() {
     }
   }
 
+  function handlePageChange(nextPage: number) {
+    setPage(nextPage);
+    clearSelection();
+  }
+
   function handlePageSizeChange(size: number) {
     setPageSize(size);
     setPage(1);
+    clearSelection();
   }
 
   function handleRowClick(customer: Customer) {
@@ -315,6 +348,59 @@ function CustomersView() {
     });
   }
 
+  function handleBulkStatusChange(status: CustomerStatus) {
+    if (selectedArray.length === 0) return;
+
+    bulkUpdateStatusMutation.mutate(
+      { ids: selectedArray, status },
+      {
+        onSuccess: () => {
+          toast.success(
+            `Updated ${selectedArray.length} customer${
+              selectedArray.length === 1 ? "" : "s"
+            } to ${status}.`
+          );
+          clearSelection();
+        },
+        onError: (error) => {
+          toast.error(
+            error.message || "Failed to update customers."
+          );
+        },
+      }
+    );
+  }
+
+  function handleBulkDeleteClick() {
+    if (selectedArray.length === 0) return;
+    setIsBulkDeleteOpen(true);
+  }
+
+  function handleCancelBulkDelete() {
+    setIsBulkDeleteOpen(false);
+  }
+
+  function handleConfirmBulkDelete() {
+    if (selectedArray.length === 0) return;
+
+    bulkDeleteMutation.mutate(selectedArray, {
+      onSuccess: () => {
+        toast.success(
+          `Deleted ${selectedArray.length} customer${
+            selectedArray.length === 1 ? "" : "s"
+          }.`
+        );
+        clearSelection();
+        setIsBulkDeleteOpen(false);
+      },
+      onError: (error) => {
+        toast.error(
+          error.message || "Failed to delete customers."
+        );
+      },
+    });
+  }
+
   function handleExportCsv() {
     if (sortedCustomers.length === 0) {
       toast.error("No customers to export.");
@@ -389,6 +475,17 @@ function CustomersView() {
         </div>
       </div>
 
+      {selectedCount > 0 && (
+        <BulkActionBar
+          selectedCount={selectedCount}
+          onClearSelection={clearSelection}
+          onBulkStatusChange={handleBulkStatusChange}
+          onBulkDelete={handleBulkDeleteClick}
+          isUpdatingStatus={bulkUpdateStatusMutation.isPending}
+          isDeleting={bulkDeleteMutation.isPending}
+        />
+      )}
+
       <CustomerTable
         customers={paginatedCustomers}
         isLoading={isLoading}
@@ -396,13 +493,18 @@ function CustomersView() {
         sortDirection={sortDirection}
         onSortChange={handleSortChange}
         onRowClick={handleRowClick}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
+        onToggleSelectAll={toggleSelectAll}
+        isAllSelected={isAllSelected}
+        isIndeterminate={isIndeterminate}
       />
 
       <CustomerPagination
         page={page}
         pageSize={pageSize}
         totalItems={sortedCustomers.length}
-        onPageChange={setPage}
+        onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
 
@@ -435,6 +537,14 @@ function CustomersView() {
         isDeleting={deleteMutation.isPending}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
+      />
+
+      <BulkDeleteDialog
+        count={selectedArray.length}
+        open={isBulkDeleteOpen}
+        isDeleting={bulkDeleteMutation.isPending}
+        onConfirm={handleConfirmBulkDelete}
+        onCancel={handleCancelBulkDelete}
       />
     </div>
   );

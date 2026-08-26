@@ -127,7 +127,7 @@ export function CustomerDetails({
       <Button
         type="button"
         variant="ghost"
-        className="bg-destructive/10 px-5 py-5 text-destructive hover:bg-destructive/20 hover:text-destructive"
+        className="bg-destructive/10 px-5 py-5 text-destructive hover:bg-destructive/20 hover:text-destructive dark:bg-destructive/20 dark:text-red-400 dark:hover:bg-destructive/30 dark:hover:text-red-300"
         onClick={() => onDelete(customer)}
       >
         Delete
@@ -233,13 +233,13 @@ function StatusBadge({
         "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset",
 
         normalizedStatus === "active" &&
-          "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+          "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-400 dark:ring-emerald-500/30",
 
         normalizedStatus === "inactive" &&
-          "bg-slate-100 text-slate-600 ring-slate-500/20",
+          "bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-slate-400/15 dark:text-slate-300 dark:ring-slate-400/30",
 
         normalizedStatus === "lead" &&
-          "bg-blue-50 text-blue-700 ring-blue-600/20",
+          "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-500/15 dark:text-blue-400 dark:ring-blue-500/30",
 
         !["active", "inactive", "lead"].includes(normalizedStatus) &&
           "bg-muted text-muted-foreground ring-border"

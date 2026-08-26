@@ -60,11 +60,24 @@ export function Sidebar({
             type="button"
             onClick={() => onSelect(label)}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors",
+              "relative flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors",
+
               active
                 ? overlapActiveTab
-                  ? "relative z-10 -mr-5 rounded-l-xl rounded-r-none bg-white text-slate-900 dark:bg-[#444444] dark:text-[#F9F9F9] md:-mr-6"
-                  : "rounded-lg bg-white text-slate-900 dark:bg-[#444444] dark:text-[#F9F9F9]"
+                  ? [
+                      "z-10 -mr-5 rounded-l-xl rounded-r-none",
+                      "bg-card text-card-foreground",
+                      "md:-mr-6",
+
+                      // Extension into the main container — bg-card auto-flips with theme
+                      "after:absolute",
+                      "after:inset-y-0",
+                      "after:-right-6",
+                      "after:w-6",
+                      "after:bg-card",
+                      "after:-z-10",
+                    ].join(" ")
+                  : "rounded-lg bg-card text-card-foreground"
                 : "text-sidebar-muted hover:bg-white/5 hover:text-white"
             )}
           >

@@ -10,23 +10,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Customer } from "@/types/customer";
 
-interface DeleteCustomerDialogProps {
-  customer: Customer | null;
+interface BulkDeleteDialogProps {
+  count: number;
   open: boolean;
   isDeleting?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function DeleteCustomerDialog({
-  customer,
+export function BulkDeleteDialog({
+  count,
   open,
   isDeleting = false,
   onConfirm,
   onCancel,
-}: DeleteCustomerDialogProps) {
+}: BulkDeleteDialogProps) {
+  const plural = count === 1 ? "customer" : "customers";
+
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
       <DialogContent className="sm:max-w-sm">
@@ -35,14 +36,12 @@ export function DeleteCustomerDialog({
             <Trash2 className="h-6 w-6 text-destructive dark:text-red-400" />
           </div>
 
-          <DialogTitle>Delete customer?</DialogTitle>
+          <DialogTitle>Delete {count} {plural}?</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            {customer ? (
-              <strong className="font-bold text-foreground">{customer.name}</strong>
-            ) : (
-              "this customer"
-            )}
+            <strong className="font-bold text-foreground">
+              {count} {plural}
+            </strong>
             ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>

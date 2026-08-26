@@ -2,6 +2,7 @@
 
 import { Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useHasMounted } from "@/hooks/useHasMounted";
 
 interface HeaderProps {
   title?: string;
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
+  const mounted = useHasMounted();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -35,16 +37,16 @@ export function Header({ onMenuClick }: HeaderProps) {
           aria-label="Rolodex"
         >
           <text
-  x="10"
-  y="72"
-  fontFamily="Inter, 'Helvetica Neue', Arial, sans-serif"
-  fontWeight="700"
-  fontSize="56"
-  letterSpacing="1"
-  className="fill-[#3B5BDB] dark:fill-[#6B7FE8]"
->
-  ROLODEX
-</text>
+            x="10"
+            y="72"
+            fontFamily="Inter, 'Helvetica Neue', Arial, sans-serif"
+            fontWeight="700"
+            fontSize="56"
+            letterSpacing="1"
+            className="fill-[#3B5BDB] dark:fill-[#4469ff]"
+          >
+            ROLODEX
+          </text>
         </svg>
       </div>
 
@@ -57,7 +59,15 @@ export function Header({ onMenuClick }: HeaderProps) {
           aria-label="Toggle theme"
           title="Toggle theme"
         >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          {!mounted ? (
+            // Server + first client paint render this identically — no mismatch.
+            // Real theme isn't knowable until after mount (it lives in localStorage).
+            <span className="block h-[18px] w-[18px]" aria-hidden="true" />
+          ) : theme === "dark" ? (
+            <Sun size={18} />
+          ) : (
+            <Moon size={18} />
+          )}
         </button>
 
         {/* User avatar */}

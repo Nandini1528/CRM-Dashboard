@@ -110,11 +110,11 @@ export function DashboardOverview() {
   }
 
   return (
-    <main className="min-h-full bg-background p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-h-full bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             Dashboard
           </h1>
 
@@ -124,7 +124,7 @@ export function DashboardOverview() {
         </div>
 
         {/* Stats */}
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           <StatCard
             label="Total customers"
             value={stats.total}
@@ -154,10 +154,10 @@ export function DashboardOverview() {
         {/* Charts */}
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
           {/* Customer engagement */}
-          <div className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
+          <div className="rounded-xl border bg-card p-3.5 shadow-sm sm:p-4 md:p-5">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-foreground">
                   Customer engagement
                 </h2>
 
@@ -171,7 +171,7 @@ export function DashboardOverview() {
               </div>
             </div>
 
-            <div className="relative h-64 w-full">
+            <div className="relative h-56 w-full sm:h-64">
               {stats.monthlyValues.length > 0 ? (
                 <Bar
                   data={{
@@ -179,7 +179,7 @@ export function DashboardOverview() {
                     datasets: [
                       {
                         data: stats.monthlyValues,
-                        backgroundColor: "#2563eb",
+                        backgroundColor: "#3b82f6",
                         borderRadius: 6,
                         borderSkipped: false,
                         barPercentage: 0.55,
@@ -248,9 +248,9 @@ export function DashboardOverview() {
           </div>
 
           {/* Customer status */}
-          <div className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
+          <div className="rounded-xl border bg-card p-3.5 shadow-sm sm:p-4 md:p-5">
             <div className="mb-4">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 Customer status
               </h2>
 
@@ -260,7 +260,7 @@ export function DashboardOverview() {
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="relative h-48 w-full max-w-[220px]">
+              <div className="relative h-44 w-full max-w-[200px] sm:h-48 sm:max-w-[220px]">
                 <Doughnut
                   data={{
                     labels: ["Active", "Inactive"],
@@ -270,7 +270,7 @@ export function DashboardOverview() {
                           stats.activeCount,
                           stats.inactiveCount,
                         ],
-                        backgroundColor: ["#22c55e", "#e2e8f0"],
+                        backgroundColor: ["#22c55e", "#64748b"],
                         borderWidth: 0,
                         hoverOffset: 4,
                       },
@@ -305,7 +305,7 @@ export function DashboardOverview() {
 
                 {/* Center value */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-semibold text-slate-900">
+                  <span className="text-2xl font-semibold text-foreground">
                     {stats.total}
                   </span>
 
@@ -328,7 +328,7 @@ export function DashboardOverview() {
                   label="Inactive"
                   value={stats.inactiveCount}
                   percentage={stats.inactivePercentage}
-                  indicatorClass="bg-slate-300"
+                  indicatorClass="bg-slate-500"
                 />
               </div>
             </div>
@@ -336,10 +336,10 @@ export function DashboardOverview() {
         </section>
 
         {/* Bottom summary */}
-        <section className="rounded-xl border bg-card p-4 shadow-sm md:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="rounded-xl border bg-card p-3.5 shadow-sm sm:p-4 md:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-foreground">
                 Customer overview
               </h2>
 
@@ -376,7 +376,7 @@ function StatCard({
   return (
     <div
       className={[
-        "rounded-xl border p-4 shadow-sm transition-shadow hover:shadow-md md:p-5",
+        "rounded-xl border p-3.5 shadow-sm transition-shadow hover:shadow-md sm:p-4 md:p-5",
         featured
           ? "border-blue-600 bg-blue-600"
           : "bg-card",
@@ -396,8 +396,8 @@ function StatCard({
         <span
           className={
             featured
-              ? "h-2 w-2 rounded-full bg-blue-200"
-              : "h-2 w-2 rounded-full bg-muted"
+              ? "h-2 w-2 shrink-0 rounded-full bg-blue-200"
+              : "h-2 w-2 shrink-0 rounded-full bg-muted-foreground/30"
           }
         />
       </div>
@@ -405,8 +405,8 @@ function StatCard({
       <p
         className={
           featured
-            ? "mt-3 text-2xl font-semibold text-white md:text-3xl"
-            : "mt-3 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl"
+            ? "mt-3 text-xl font-semibold text-white sm:text-2xl md:text-3xl"
+            : "mt-3 text-xl font-semibold tracking-tight text-foreground sm:text-2xl md:text-3xl"
         }
       >
         {value}
@@ -443,11 +443,11 @@ function StatusRow({
           className={`h-2.5 w-2.5 rounded-full ${indicatorClass}`}
         />
 
-        <span className="text-sm text-slate-700">{label}</span>
+        <span className="text-sm text-foreground/90">{label}</span>
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-slate-900">
+        <span className="text-sm font-medium text-foreground">
           {value}
         </span>
 
@@ -461,8 +461,8 @@ function StatusRow({
 
 function DashboardSkeleton() {
   return (
-    <main className="min-h-full bg-background p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <main className="min-h-full bg-background p-3 sm:p-4 md:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
         {/* Header */}
         <div className="space-y-2">
           <div className="h-7 w-32 animate-pulse rounded-md bg-muted" />
@@ -470,19 +470,19 @@ function DashboardSkeleton() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-32 animate-pulse rounded-xl bg-muted"
+              className="h-28 animate-pulse rounded-xl bg-muted sm:h-32"
             />
           ))}
         </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-          <div className="h-80 animate-pulse rounded-xl bg-muted" />
-          <div className="h-80 animate-pulse rounded-xl bg-muted" />
+          <div className="h-72 animate-pulse rounded-xl bg-muted sm:h-80" />
+          <div className="h-72 animate-pulse rounded-xl bg-muted sm:h-80" />
         </div>
 
         {/* Bottom */}

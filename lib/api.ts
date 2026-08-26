@@ -1,4 +1,4 @@
-import { Customer, CustomerInput } from "@/types/customer";
+import { Customer, CustomerInput, CustomerStatus } from "@/types/customer";
 import { mockCustomers } from "@/data/customers";
 
 function delay(ms: number) {
@@ -49,4 +49,31 @@ export async function deleteCustomer(id: string): Promise<void> {
     throw new Error(`Customer with id "${id}" not found.`);
   }
   mockCustomers.splice(index, 1);
+}
+
+// --- Bulk actions ---
+
+export async function bulkUpdateCustomerStatus(
+  ids: string[],
+  status: CustomerStatus
+): Promise<void> {
+  await delay(600);
+
+  const idSet = new Set(ids);
+  mockCustomers.forEach((customer, index) => {
+    if (idSet.has(customer.id)) {
+      mockCustomers[index] = { ...customer, status };
+    }
+  });
+}
+
+export async function bulkDeleteCustomers(ids: string[]): Promise<void> {
+  await delay(500);
+
+  const idSet = new Set(ids);
+  for (let i = mockCustomers.length - 1; i >= 0; i--) {
+    if (idSet.has(mockCustomers[i].id)) {
+      mockCustomers.splice(i, 1);
+    }
+  }
 }

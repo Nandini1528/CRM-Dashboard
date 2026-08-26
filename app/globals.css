@@ -2,16 +2,18 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Tailwind v4 defaults dark: to prefers-color-scheme media query.
+   This app's next-themes setup toggles data-theme="dark" on <html>
+   (not a .dark class) — this tells Tailwind to key off that attribute
+   so the toggle button actually works. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
-  --color-sidebar: #383838;
-  --color-sidebar-expanded: #383838;
   --color-sidebar-foreground: #E2E4F0;
   --color-sidebar-muted: #9198B5;
 
-  --color-accent: #4F46E5;
   --color-accent-hover: #4338CA;
 
-  --color-background: #FFFFFF;
   --color-border-subtle: #E5E7EB;
 
   --color-status-active-bg: #DCFCE7;
@@ -54,6 +56,10 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
 
+  /* Sidebar tokens now theme-aware (were static before, couldn't respond to .dark) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-expanded: var(--sidebar);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -82,7 +88,7 @@
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
 
-  --accent: oklch(0.97 0 0);
+  --accent: #4F46E5;
   --accent-foreground: oklch(0.205 0 0);
 
   --destructive: oklch(0.577 0.245 27.325);
@@ -98,9 +104,12 @@
   --chart-5: oklch(0.269 0 0);
 
   --radius: 0.625rem;
+
+  /* Sidebar: same color for collapsed + expanded */
+  --sidebar: #383838;
 }
 
-.dark {
+[data-theme="dark"] {
   --background: #444444;
   --foreground: #F9F9F9;
 
@@ -133,6 +142,8 @@
   --chart-3: #A5B1F4;
   --chart-4: #C0C8F7;
   --chart-5: #D8DCFA;
+
+  --sidebar: #000000;
 }
 
 @layer base {

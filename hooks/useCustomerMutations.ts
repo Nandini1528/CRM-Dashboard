@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCustomer, updateCustomer, deleteCustomer } from "@/lib/api";
+import {
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  bulkUpdateCustomerStatus,
+  bulkDeleteCustomers,
+} from "@/lib/api";
 import { customersQueryKey } from "@/hooks/useCustomers";
-import type { Customer, CustomerInput } from "@/types/customer";
+import type { Customer, CustomerInput, CustomerStatus } from "@/types/customer";
 
 export function useCustomerMutations() {
   const queryClient = useQueryClient();
@@ -87,5 +93,72 @@ export function useCustomerMutations() {
     },
   });
 
-  return { createMutation, updateMutation, deleteMutation };
+  // --- Bulk actions ---
+
+  const bulkUpdateStatusMutation = useMutation({
+    mutationFn: ({ ids, status }: { ids: string[]; status: CustomerStatus }) =>
+      bulkUpdateCustomerStatus(ids, status),
+
+    onMutate: async ({
+      ids,
+      status,
+    }: {
+      ids: string[];
+      status: CustomerStatus;
+    }) => {
+      await queryClient.cancelQueries({ queryKey: customersQueryKey });
+      const previous = queryClient.getQueryData<Customer[]>(customersQueryKey);
+
+      const idSet = new Set(ids);
+      queryClient.setQueryData<Customer[]>(customersQueryKey, (old) =>
+        old?.map((c) => (idSet.has(c.id) ? { ...c, status } : c))
+      );
+
+      return { previous };
+    },
+
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(customersQueryKey, context.previous);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customersQueryKey });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteCustomers(ids),
+
+    onMutate: async (ids: string[]) => {
+      await queryClient.cancelQueries({ queryKey: customersQueryKey });
+      const previous = queryClient.getQueryData<Customer[]>(customersQueryKey);
+
+      const idSet = new Set(ids);
+      queryClient.setQueryData<Customer[]>(customersQueryKey, (old) =>
+        old?.filter((c) => !idSet.has(c.id))
+      );
+
+      return { previous };
+    },
+
+    onError: (_err, _ids, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(customersQueryKey, context.previous);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customersQueryKey });
+    },
+  });
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    bulkUpdateStatusMutation,
+    bulkDeleteMutation,
+  };
 }
