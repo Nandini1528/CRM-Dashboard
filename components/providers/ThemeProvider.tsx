@@ -9,10 +9,10 @@ export function ThemeProvider({
 }) {
   return (
     <NextThemesProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem={false}
-    >
+  attribute="data-theme"
+  defaultTheme="light"
+  enableSystem={false}
+>
       {children}
     </NextThemesProvider>
   );

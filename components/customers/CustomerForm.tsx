@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -26,11 +25,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { CustomerAvatar } from "./CustomerAvatar";
 import { getAvatarBannerColor } from "@/lib/avatar";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { CUSTOMER_STATUSES, type CustomerInput } from "@/types/customer";
+import {
+  CUSTOMER_STATUSES,
+  type CustomerInput,
+} from "@/types/customer";
 
 const EMPTY_VALUES: CustomerInput = {
   name: "",
@@ -42,40 +52,8 @@ const EMPTY_VALUES: CustomerInput = {
   notes: "",
 };
 
-type FormErrors = Partial<Record<keyof CustomerInput, string>>;
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[\d\s()+-]{7,}$/;
-
-function validate(values: CustomerInput): FormErrors {
-  const errors: FormErrors = {};
-
-  if (!values.name.trim()) {
-    errors.name = "Name is required.";
-  }
-
-  if (!values.email.trim()) {
-    errors.email = "Email is required.";
-  } else if (!EMAIL_REGEX.test(values.email.trim())) {
-    errors.email = "Enter a valid email address.";
-  }
-
-  if (!values.phone.trim()) {
-    errors.phone = "Phone is required.";
-  } else if (!PHONE_REGEX.test(values.phone.trim())) {
-    errors.phone = "Enter a valid phone number.";
-  }
-
-  if (!values.company.trim()) {
-    errors.company = "Company is required.";
-  }
-
-  if (!values.lastContactDate) {
-    errors.lastContactDate = "Last contact date is required.";
-  }
-
-  return errors;
-}
 
 interface CustomerFormProps {
   open: boolean;
@@ -96,47 +74,28 @@ export function CustomerForm({
   onSubmit,
   onCancel,
 }: CustomerFormProps) {
-  const [values, setValues] = useState<CustomerInput>(
-    initialValues ?? EMPTY_VALUES
-  );
-  const [errors, setErrors] = useState<FormErrors>({});
+  const form = useForm<CustomerInput>({
+    defaultValues: initialValues ?? EMPTY_VALUES,
+    mode: "onSubmit",
+  });
+
   const isMobile = useIsMobile();
 
   function handleOpenChange(next: boolean) {
-    if (!next) onCancel();
-  }
-
-  function updateField<K extends keyof CustomerInput>(
-    key: K,
-    value: CustomerInput[K]
-  ) {
-    setValues((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-
-    if (errors[key]) {
-      setErrors((prev) => ({
-        ...prev,
-        [key]: undefined,
-      }));
+    if (!next) {
+      onCancel();
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const onValid: SubmitHandler<CustomerInput> = (values) => {
+    onSubmit(values);
+  };
 
-    const nextErrors = validate(values);
-
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length === 0) {
-      onSubmit(values);
-    }
-  }
+  const nameValue = form.watch("name");
+  const emailValue = form.watch("email");
 
   const displayName =
-    values.name.trim() || (mode === "create" ? "New Customer" : "");
+    nameValue.trim() || (mode === "create" ? "New Customer" : "");
 
   /* =========================
      Form Fields
@@ -144,89 +103,181 @@ export function CustomerForm({
 
   const fields = (
     <div className="flex flex-col gap-4">
-      <Field label="Name" error={errors.name} required>
-        <Input
-          value={values.name}
-          onChange={(e) => updateField("name", e.target.value)}
-          placeholder="Jane Doe"
-        />
-      </Field>
+      <FormField
+        control={form.control}
+        name="name"
+        rules={{
+          required: "Name is required.",
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-normal text-muted-foreground">
+              Name <span className="text-destructive">*</span>
+            </FormLabel>
 
-      <Field label="Email" error={errors.email} required>
-        <Input
-          type="email"
-          value={values.email}
-          onChange={(e) => updateField("email", e.target.value)}
-          placeholder="jane@company.com"
-        />
-      </Field>
+            <FormControl>
+              <Input placeholder="Jane Doe" {...field} />
+            </FormControl>
 
-      <Field label="Phone" error={errors.phone} required>
-        <Input
-          value={values.phone}
-          onChange={(e) => updateField("phone", e.target.value)}
-          placeholder="+91 12345 67890"
-        />
-      </Field>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
 
-      <Field label="Company" error={errors.company} required>
-        <Input
-          value={values.company}
-          onChange={(e) => updateField("company", e.target.value)}
-          placeholder="Acme Corp"
-        />
-      </Field>
+      <FormField
+        control={form.control}
+        name="email"
+        rules={{
+          required: "Email is required.",
+          validate: (value) =>
+            EMAIL_REGEX.test(value.trim()) ||
+            "Enter a valid email address.",
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-normal text-muted-foreground">
+              Email <span className="text-destructive">*</span>
+            </FormLabel>
+
+            <FormControl>
+              <Input
+                type="email"
+                placeholder="jane@company.com"
+                {...field}
+              />
+            </FormControl>
+
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="phone"
+        rules={{
+          required: "Phone is required.",
+          validate: (value) =>
+            PHONE_REGEX.test(value.trim()) ||
+            "Enter a valid phone number.",
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-normal text-muted-foreground">
+              Phone <span className="text-destructive">*</span>
+            </FormLabel>
+
+            <FormControl>
+              <Input
+                placeholder="+91 12345 67890"
+                {...field}
+              />
+            </FormControl>
+
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="company"
+        rules={{
+          required: "Company is required.",
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-normal text-muted-foreground">
+              Company <span className="text-destructive">*</span>
+            </FormLabel>
+
+            <FormControl>
+              <Input placeholder="Acme Corp" {...field} />
+            </FormControl>
+
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
 
       <div className="grid grid-cols-2 items-start gap-4">
-        <Field label="Status">
-          <Select
-            value={values.status}
-            onValueChange={(v: string) =>
-              updateField(
-                "status",
-                v as CustomerInput["status"]
-              )
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-normal text-muted-foreground">
+                Status
+              </FormLabel>
 
-            <SelectContent>
-              {CUSTOMER_STATUSES.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
 
-        <Field
-          label="Last Contact Date"
-          error={errors.lastContactDate}
-          required
-        >
-          <Input
-            type="date"
-            value={values.lastContactDate}
-            onChange={(e) =>
-              updateField("lastContactDate", e.target.value)
-            }
-          />
-        </Field>
+                <SelectContent>
+                  {CUSTOMER_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="lastContactDate"
+          rules={{
+            required: "Last contact date is required.",
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-normal text-muted-foreground">
+                Last Contact Date{" "}
+                <span className="text-destructive">*</span>
+              </FormLabel>
+
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
       </div>
 
-      <Field label="Notes">
-        <Textarea
-          value={values.notes}
-          onChange={(e) =>
-            updateField("notes", e.target.value)
-          }
-          placeholder="Meeting notes and follow-up items..."
-          rows={3}
-        />
-      </Field>
+      <FormField
+        control={form.control}
+        name="notes"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-normal text-muted-foreground">
+              Notes
+            </FormLabel>
+
+            <FormControl>
+              <Textarea
+                placeholder="Meeting notes and follow-up items..."
+                rows={3}
+                {...field}
+              />
+            </FormControl>
+
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
 
       {submitError && (
         <p className="text-sm text-destructive">
@@ -234,7 +285,6 @@ export function CustomerForm({
         </p>
       )}
 
-      {/* Extra bottom padding so content clears the footer */}
       <div className="h-2" />
     </div>
   );
@@ -258,11 +308,11 @@ export function CustomerForm({
 
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-xl font-semibold leading-tight tracking-tight">
-            {values.name.trim() || "New Customer"}
+            {nameValue.trim() || "New Customer"}
           </p>
 
           <p className="max-w-70 truncate text-sm leading-tight text-muted-foreground">
-            {values.email.trim() || "No email yet"}
+            {emailValue.trim() || "No email yet"}
           </p>
         </div>
       </div>
@@ -305,24 +355,71 @@ export function CustomerForm({
 
   if (isMobile) {
     return (
-      <Sheet
-        open={open}
-        onOpenChange={handleOpenChange}
-      >
-        <SheetContent
-          side="bottom"
-          className="flex h-[92vh] flex-col gap-0 overflow-hidden rounded-t-2xl p-0"
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>
+      <Form {...form}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
+          <SheetContent
+            side="bottom"
+            className="flex h-[92vh] flex-col gap-0 overflow-hidden rounded-t-2xl p-0"
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>
+                {mode === "create"
+                  ? "Add Customer"
+                  : "Edit Customer"}
+              </SheetTitle>
+            </SheetHeader>
+
+            <form
+              onSubmit={form.handleSubmit(onValid)}
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            >
+              {/* Banner */}
+              <div
+                className={cn(
+                  "h-24 shrink-0",
+                  getAvatarBannerColor(displayName || "?")
+                )}
+              />
+
+              {/* Avatar + Name + Email */}
+              {header}
+
+              {/* Scrollable Form */}
+              <div className="min-h-0 flex-1 overflow-y-auto px-8">
+                <div className="my-6 border-t" />
+
+                {fields}
+              </div>
+
+              {/* Footer */}
+              <SheetFooter className="flex-row items-center gap-3 border-t bg-muted/20 px-4 py-4">
+                {actions}
+              </SheetFooter>
+            </form>
+          </SheetContent>
+        </Sheet>
+      </Form>
+    );
+  }
+
+  /* =========================
+     Desktop: Dialog
+     ========================= */
+
+  return (
+    <Form {...form}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
               {mode === "create"
                 ? "Add Customer"
                 : "Edit Customer"}
-            </SheetTitle>
-          </SheetHeader>
+            </DialogTitle>
+          </DialogHeader>
 
           <form
-            onSubmit={handleSubmit}
+            onSubmit={form.handleSubmit(onValid)}
             className="flex min-h-0 flex-1 flex-col overflow-hidden"
           >
             {/* Banner */}
@@ -344,96 +441,15 @@ export function CustomerForm({
             </div>
 
             {/* Footer */}
-            <SheetFooter className="flex-row items-center gap-3 border-t bg-muted/20 px-4 py-4">
-              {actions}
-            </SheetFooter>
+            <DialogFooter className="flex-row items-center justify-end gap-3 border-t bg-muted/20 px-8 py-6">
+              <div className="-translate-y-1 flex items-center gap-3">
+                {actions}
+              </div>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  /* =========================
-     Desktop: Dialog
-     ========================= */
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={handleOpenChange}
-    >
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <DialogHeader className="sr-only">
-          <DialogTitle>
-            {mode === "create"
-              ? "Add Customer"
-              : "Edit Customer"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <form
-          onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-        >
-          {/* Banner */}
-          <div
-            className={cn(
-              "h-24 shrink-0",
-              getAvatarBannerColor(displayName || "?")
-            )}
-          />
-
-          {/* Avatar + Name + Email */}
-          {header}
-
-          {/* Scrollable Form */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-8">
-            <div className="my-6 border-t" />
-
-            {fields}
-          </div>
-
-          {/* Footer */}
-          <DialogFooter className="flex-row items-center justify-end gap-3 border-t bg-muted/20 px-8 py-6 -translate-y-1">
-            {actions}
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </Form>
   );
 }
 
-/* =========================
-   Field
-   ========================= */
-
-function Field({
-  label,
-  error,
-  required,
-  children,
-}: {
-  label: string;
-  error?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <Label className="mb-1.5 block text-sm font-normal text-muted-foreground">
-        {label}{" "}
-        {required && (
-          <span className="text-destructive">*</span>
-        )}
-      </Label>
-
-      {children}
-
-      {error && (
-        <p className="mt-1 text-xs text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}

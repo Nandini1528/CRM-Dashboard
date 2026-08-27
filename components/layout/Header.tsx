@@ -14,22 +14,25 @@ export function Header({ onMenuClick }: HeaderProps) {
   const mounted = useHasMounted();
 
   const toggleTheme = () => {
+    if (!mounted) return;
+
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b bg-background">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
       <div className="flex items-center gap-3">
+        {/* Mobile menu */}
         <button
           type="button"
           onClick={onMenuClick}
-          className="md:hidden p-2 rounded-md hover:bg-muted text-foreground"
+          className="rounded-md p-2 text-foreground transition-colors hover:bg-muted md:hidden"
           aria-label="Open menu"
         >
           <Menu size={20} />
         </button>
 
-        {/* App brand — wordmark logo */}
+        {/* App brand */}
         <svg
           viewBox="0 0 420 100"
           className="h-6 w-auto text-foreground"
@@ -55,14 +58,28 @@ export function Header({ onMenuClick }: HeaderProps) {
         <button
           type="button"
           onClick={toggleTheme}
-          className="flex h-9 w-9 items-center justify-center rounded-md text-foreground hover:bg-muted transition-colors"
-          aria-label="Toggle theme"
-          title="Toggle theme"
+          disabled={!mounted}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted disabled:pointer-events-none"
+          aria-label={
+            !mounted
+              ? "Toggle theme"
+              : theme === "dark"
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+          }
+          title={
+            !mounted
+              ? "Toggle theme"
+              : theme === "dark"
+                ? "Switch to light mode"
+                : "Switch to dark mode"
+          }
         >
           {!mounted ? (
-            // Server + first client paint render this identically — no mismatch.
-            // Real theme isn't knowable until after mount (it lives in localStorage).
-            <span className="block h-[18px] w-[18px]" aria-hidden="true" />
+            <span
+              className="block h-[18px] w-[18px]"
+              aria-hidden="true"
+            />
           ) : theme === "dark" ? (
             <Sun size={18} />
           ) : (

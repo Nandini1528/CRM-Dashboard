@@ -116,7 +116,6 @@ export function CustomerDetails({
           </p>
         </section>
 
-        {/* Extra bottom padding so content clears the sticky footer */}
         <div className="h-4" />
       </div>
     </>
@@ -146,11 +145,14 @@ export function CustomerDetails({
   /* =========================
      Mobile: Bottom Sheet
      ========================= */
+
   if (isMobile) {
     return (
       <Sheet
         open={open}
-        onOpenChange={(next) => !next && onClose()}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
       >
         <SheetContent
           side="bottom"
@@ -173,10 +175,13 @@ export function CustomerDetails({
   /* =========================
      Desktop: Dialog
      ========================= */
+
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => !next && onClose()}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="sr-only">
@@ -186,10 +191,10 @@ export function CustomerDetails({
         {body}
 
         <DialogFooter className="flex-row items-center justify-end gap-3 border-t bg-muted/20 px-8 py-6">
-  <div className="-translate-y-1 flex items-center gap-3">
-    {actions}
-  </div>
-</DialogFooter>
+          <div className="-translate-y-1 flex items-center gap-3">
+            {actions}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -219,6 +224,9 @@ function DetailRow({
   );
 }
 
+/* =========================
+   Status Badge
+   ========================= */
 
 function StatusBadge({
   status,
@@ -249,14 +257,11 @@ function StatusBadge({
         className={cn(
           "mr-1.5 h-1.5 w-1.5 rounded-full",
 
-          normalizedStatus === "active" &&
-            "bg-emerald-500",
+          normalizedStatus === "active" && "bg-emerald-500",
 
-          normalizedStatus === "inactive" &&
-            "bg-slate-400",
+          normalizedStatus === "inactive" && "bg-slate-400",
 
-          normalizedStatus === "lead" &&
-            "bg-blue-500",
+          normalizedStatus === "lead" && "bg-blue-500",
 
           !["active", "inactive", "lead"].includes(normalizedStatus) &&
             "bg-muted-foreground"
@@ -267,3 +272,4 @@ function StatusBadge({
     </span>
   );
 }
+
