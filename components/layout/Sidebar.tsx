@@ -9,9 +9,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { label: "Customers", icon: Users },
   { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Settings", icon: Settings },
+  { label: "Customers", icon: Users },
 ] as const;
 
 export type NavSection =
