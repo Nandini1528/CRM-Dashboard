@@ -3,7 +3,7 @@
 *A customer management dashboard with advanced filtering, real-time search, and full CRUD, built for speed and clarity when managing hundreds of contacts.*
 
 <p align="center">
-  <a href="https://your-deployment-url.vercel.app">
+  <a href="https://crm-dashboard-wine-five.vercel.app">
     <img src="https://img.shields.io/badge/🌐%20Live%20Demo-Visit%20Website-success?style=for-the-badge" />
   </a>
   <a href="https://github.com/Nandini1528/CRM-Dashboard">
@@ -32,7 +32,7 @@ Rather than a bare CRUD table, Rolodex focuses on the workflows people actually 
 
 ## Live Demo
 
-🔗 **Try Rolodex:** **[your-deployment-url.vercel.app](https://your-deployment-url.vercel.app)**
+🔗 **Try Rolodex:** **[crm-dashboard-wine-five.vercel.app](https://crm-dashboard-wine-five.vercel.app)**
 
 No installation required to explore the application.
 
@@ -40,29 +40,53 @@ No installation required to explore the application.
 
 ## Preview
 
-### Customer List & Search
+### Dashboard
 <p align="center">
-  <img src="./docs/list-view.png" width="900"/>
+  <img src="./docs/dashboard-light.png" width="900"/>
 </p>
-<!-- TODO: add screenshot -->
 
-### Advanced Filters Panel
-<p align="center">
-  <img src="./docs/filters.png" width="900"/>
-</p>
-<!-- TODO: add screenshot -->
 
-### Customer Details
-<p align="center">
-  <img src="./docs/details.png" width="900"/>
-</p>
-<!-- TODO: add screenshot -->
+### Customer List — Light & Dark
+<table align="center">
+  <tr>
+    <td><img src="./docs/list-light.png" width="440"/></td>
+    <td><img src="./docs/list-dark.png" width="440"/></td>
+  </tr>
+</table>
 
-### Dark Mode
-<p align="center">
-  <img src="./docs/dark-mode.png" width="900"/>
-</p>
-<!-- TODO: add screenshot -->
+
+### Filters Panel — Light & Dark
+<table align="center">
+  <tr>
+    <td><img src="./docs/filters-light.png" width="440"/></td>
+    <td><img src="./docs/filters-dark.png" width="440"/></td>
+  </tr>
+</table>
+
+
+### Customer Details & Add Customer
+<table align="center">
+  <tr>
+    <td><img src="./docs/details-light.png" width="440"/></td>
+    <td><img src="./docs/add-customer-dark.png" width="440"/></td>
+  </tr>
+</table>
+
+### Mobile : Customer List — Light & Dark
+<table align="center">
+  <tr>
+    <td><img src="./docs/mobile-list-light.png" width="260"/></td>
+    <td><img src="./docs/mobile-list-dark.png" width="260"/></td>
+  </tr>
+</table>
+
+### Mobile : Customer Details — Light & Dark
+<table align="center">
+  <tr>
+    <td><img src="./docs/mobile-details-light.png" width="260"/></td>
+    <td><img src="./docs/mobile-details-dark.png" width="260"/></td>
+  </tr>
+</table>
 
 ---
 
@@ -79,7 +103,7 @@ No installation required to explore the application.
 - 🌓 Dark / light mode toggle
 - ⏱️ Debounced search for performance
 - 📈 Dashboard overview with summary stats
-- 📱 Fully responsive across desktop and mobile
+- 📱 Fully responsive across desktop and mobile sidebar collapses into a drawer, dialogs adapt spacing at smaller breakpoints
 
 ---
 
@@ -262,6 +286,6 @@ Full-Stack Developer • MERN Stack • UI/UX Enthusiast • AI
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
