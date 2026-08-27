@@ -97,7 +97,7 @@ No installation required to explore the application.
 - 💾 Save and reorder custom filter combinations via drag-and-drop
 - 📊 Sortable, paginated customer table (10 / 25 / 50 per page)
 - 👤 Full customer CRUD with inline form validation
-- ⚡ Optimistic UI updates powered by TanStack Query
+- ⚡ Optimistic delete updates powered by TanStack Query
 - ✅ Bulk actions — select multiple, bulk status update, bulk delete
 - 📤 Export filtered customers as CSV
 - 🌓 Dark / light mode toggle
@@ -111,7 +111,7 @@ No installation required to explore the application.
 
 - Make filtering and searching large contact lists fast and intuitive
 - Keep the UI dense with information without feeling cluttered
-- Demonstrate clean data-fetching architecture with proper caching and optimistic updates
+- Demonstrate clean data-fetching architecture with proper caching and optimistic UI patterns
 - Ensure the experience holds up equally well on mobile and desktop
 
 ---
@@ -258,7 +258,7 @@ npm start
 
 ## System Approach
 
-Customer data is managed entirely through TanStack Query, with mutations (`create`, `update`, `delete`) applying optimistic updates so the UI reflects changes instantly, then rolling back automatically if a request fails.
+Customer data is managed through TanStack Query, with delete mutations using optimistic updates so the UI reflects changes instantly and rolls back automatically if a request fails.
 
 Search, filters, sorting, and pagination are all composed client-side, and saved filter combinations persist via `localStorage`, scoped per browser. The layout is fully responsive, with the sidebar collapsing into a mobile drawer and dialogs adapting their spacing at smaller breakpoints, rather than switching to a separate mobile-only layout.
 
@@ -285,7 +285,3 @@ Full-Stack Developer • MERN Stack • UI/UX Enthusiast • AI
 **LinkedIn:** www.linkedin.com/in/nandini-tekwade
 
 ---
-
-## License
-
-This project is licensed under the MIT License.
