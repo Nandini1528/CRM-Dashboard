@@ -91,6 +91,7 @@ export function CustomerForm({
     onSubmit(values);
   };
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const nameValue = form.watch("name");
   const emailValue = form.watch("email");
 

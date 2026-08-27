@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Users,
   LayoutDashboard,
-  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
